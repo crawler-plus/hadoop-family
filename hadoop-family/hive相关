@@ -1,0 +1,147 @@
+hive版本:apache-hive-2.3.3
+安装步骤：
+1）解压hive并且配置到系统环境变量（省略）
+2）开启mysql
+3）配置文件：
+cd $HIVE_HOME/conf
+touch hive-site.xml
+vim hive-site.xml
+    <configuration>
+    	<property>
+      		<name>javax.jdo.option.ConnectionURL</name>
+        		<value>jdbc:mysql://localhost:3306/sparksql?createDatabaseIfNotExist=true</value>
+        </property>
+
+    	<property>
+        		<name>javax.jdo.option.ConnectionDriverName</name>
+            	<value>com.mysql.jdbc.Driver</value>
+       	</property>
+
+    	<property>
+      		<name>javax.jdo.option.ConnectionUserName</name>
+        		<value>root</value>
+        </property>
+
+    	<property>
+      		<name>javax.jdo.option.ConnectionPassword</name>
+        		<value>root</value>
+        </property>
+    </configuration>
+
+4）将mysql的驱动包放在$HIVE_HOME/lib中
+5) HIVE2.X 版本需要执行schematool -dbType mysql -initSchema，初始化数据库
+6）进入$HIVE_HOME/bin ,执行./hive
+--------------------------------------------------------------------------
+测试：
+准备数据：将下面的数据保存在student.txt中
+95002,刘晨,女,19,IS
+95017,王风娟,女,18,IS
+95018,王一,女,19,IS
+95013,冯伟,男,21,CS
+95014,王小丽,女,19,CS
+95019,邢小丽,女,19,IS
+95020,赵钱,男,21,IS
+95003,王敏,女,22,MA
+95004,张立,男,19,IS
+95012,孙花,女,20,CS
+95010,孔小涛,男,19,CS
+95005,刘刚,男,18,MA
+95006,孙庆,男,23,CS
+95007,易思玲,女,19,MA
+95008,李娜,女,18,CS
+95021,周二,男,17,MA
+95022,郑明,男,20,MA
+95001,李勇,男,20,CS
+95011,包小柏,男,18,MA
+95009,梦圆圆,女,18,MA
+95015,王君,男,18,MA
+
+启动hive客户端，创建一个数据库
+create database myhive;
+
+使用这个数据库
+use myhive;
+
+查看当前正在使用的数据库：
+select current_database();
+
+在当前数据库中创建一张student表
+create table student(id int, name string, sex string, age int, department string) row format delimited fields terminated by ",";
+
+往表中加载数据：
+load data local inpath "/root/hive-test/student.txt" into table student;
+
+查询数据
+select * from student;
+
+查看表结构：
+desc student;
+desc extended student;
+desc formatted student;
+
+查看所有数据库：
+show databases;
+
+显示数据库的详细信息
+desc database myhive;
+desc database extended myhive;
+
+查看创建数据库的详细语句：
+show create database myhive;
+
+删除库：
+drop database db;
+drop database if exists db;
+
+hive 不允许删除包含表的数据库，有两种解决办法
+1、 手动删除库下所有表，然后删除库
+2、 使用 cascade 关键字（drop database if exists db cascade;）
+
+创建外部表：
+create external table student_ext
+(id int, name string, sex string, age int,department string) row format delimited fields terminated by "," location "/hive/student";
+
+使用hql创建表：
+create table student_ctas as select * from student where id < 95012;
+
+复制表结构：
+create table student_copy like student;
+
+查看非当前数据库中有那些表：
+show tables in myhive;
+
+查看以...开头的表
+show tables like 'student_c*';
+
+修改表名：
+alter table student rename to new_student;
+
+增加一个字段：
+alter table new_student add columns (score int);
+
+修改一个字段定义：
+alter table new_student change name new_name string;
+
+清空表：
+truncate table new_student;
+
+创建视图：
+create view view_cdt as select * from cdt;
+
+查看视图：
+show views;
+
+查看具体视图的信息
+desc view_cdt;
+
+删除视图：
+drop view view_cdt;
+
+查看内置函数
+show functions;
+
+当 Hive 提供的内置函数无法满足业务处理需要时，此时就可以考虑使用用户自定义函数。
+UDF（user-defined function）作用于单个数据行，产生一个数据行作为输出。（数学函数，字 符串函数）
+UDAF（用户定义聚集函数 User- Defined Aggregation Funcation）：接收多个输入数据行，并产 生一个输出数据行。（count，max）
+UDTF（表格生成函数 User-Defined Table Functions）：接收一行输入，输出多行（explode）
+

@@ -1,0 +1,47 @@
+hbase版本:hbase-1.4.4
+安装步骤：
+1）解压hbase并且配置到系统环境变量（省略）
+2）配置文件：
+$HBASE_HOME/
+hbase-env.sh
+ 修改
+ export JAVA_HOME=/usr/local/jdk1.8.0_144
+ 然后注释掉
+ export HBASE_MASTER_OPTS="$HBASE_MASTER_OPTS -XX:PermSize=128m -XX:MaxPermSize=128m -XX:ReservedCodeCacheSize=256m"
+ export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS -XX:PermSize=128m -XX:MaxPermSize=128m -XX:ReservedCodeCacheSize=256m"
+ 然后将export HBASE_MANAGES_ZK=false
+
+hbase-site.xml
+    <configuration>
+        <property>
+                <name>hbase.rootdir</name>
+                <value>hdfs://hadoop:8020/hbase</value>
+        </property>
+         <property>
+                <name>hbase.cluster.distributed</name>
+                <value>true</value>
+        </property>
+         <property>
+                <name>hbase.zookeeper.quorum</name>
+                <value>hadoop:2181</value>
+        </property>
+        <property>
+                <name>hbase.zookeeper.property.dataDir</name>
+                <value>/root/hbase-data</value>
+        </property>
+        <property>
+                <name>hbase.zookeeper.property.clientPort</name>
+                <value>2181</value>
+        </property>
+    </configuration>
+
+3）将如下两个hadoop中的配置文件拷贝到hbase的conf文件夹中
+cp $HADOOP_HOME/etc/hadoop/hdfs-site.xml .
+cp $HADOOP_HOME/etc/hadoop/core-site.xml .
+
+4）在保证hadoop的hdfs进程启动之后，启动hbase
+$HBASE_HOME/
+./start-hbase.sh
+
+4）进入客户端
+./hbase shell

@@ -1,0 +1,28 @@
+kafka版本:kafka_2.11-0.11.0.0
+安装步骤：
+1）解压kafka并且配置到系统环境变量（省略）
+2）配置文件：
+$KAFKA_HOME/config/server.properties
+broker.id=0
+log.dirs=/root/kafka-logs
+zookeeper.connect=hadoop:2181
+
+启动Kafka
+kafka-server-start.sh
+USAGE: $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+
+创建topic: zk
+$KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper hadoop:2181 --replication-factor 1 --partitions 1 --topic hello_topic
+
+查看所有topic
+$KAFKA_HOME/bin/kafka-topics.sh --list --zookeeper hadoop:2181
+
+发送消息: broker
+$KAFKA_HOME/bin/kafka-console-producer.sh --broker-list hadoop:9092 --topic hello_topic
+
+消费消息: zk
+$KAFKA_HOME/bin/kafka-console-consumer.sh --zookeeper hadoop:2181 --topic hello_topic --from-beginning
+
+--from-beginning的使用
+查看所有topic的详细信息：$KAFKA_HOME/bin/kafka-topics.sh --describe --zookeeper hadoop:2181
+查看指定topic的详细信息：$KAFKA_HOME/bin/kafka-topics.sh --describe --zookeeper hadoop:2181 --topic hello_topic

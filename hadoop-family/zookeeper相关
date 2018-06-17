@@ -1,0 +1,13 @@
+zookeeper版本：zookeeper-3.4.12
+安装步骤：
+1）解压zookeeper并且配置到系统环境变量（省略）
+2）配置zoo.cfg:
+cd $ZK_HOME/conf
+cp zoo_sample.cfg zoo.cfg
+vim zoo.cfg
+修改一行：dataDir=/usr/local/zookeeper-3.4.12/tmp，前提是相关路径下要有tmp文件夹
+3）启动
+cd $ZK_HOME/bin
+./zkServer.sh start
+4）启动客户端
+./zkCli.sh

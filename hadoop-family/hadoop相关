@@ -1,0 +1,88 @@
+环境准备CentOS-7
+jdk1.8
+hadoop版本：hadoop-2.9.0
+安装步骤：
+1）免密码登录：ssh-keygen -t rsa 一顿回车
+cd .ssh
+touch authorized_keys
+cat id_rsa.pub >> authorized_keys
+2）修改hostname为hadoop
+vim /etc/hosts
+添加一行：192.168.0.110 hadoop
+3）安装jdk1.8并配置环境变量（省略）
+4）安装hadoop并配置环境变量（省略）
+5）修改配置文件 $HADOOP_HOME/etc/hadoop
+hadoop-env.sh:
+    export JAVA_HOME=/usr/local/jdk1.8.0_144
+
+core-site.xml:
+    <configuration>
+            <property>
+                    <name>hadoop.tmp.dir</name>
+                    <value>/root/hadoop/tmp</value>
+            </property>
+            <property>
+                    <name>fs.defaultFS</name>
+                    <value>hdfs://hadoop:8020</value>
+            </property>
+    </configuration>
+
+hdfs-site.xml:
+    <configuration>
+            <property>
+                    <name>dfs.replication</name>
+                    <value>1</value>
+            </property>
+    </configuration>
+6）格式化文件系统（仅仅第一次执行）：hdfs namenode -format
+7）$HADOOP_HOME/sbin 下执行
+./start-dfs.sh
+8）检查进程
+[root@docker sbin]# jps
+2384 SecondaryNameNode
+2194 DataNode
+2519 Jps
+2094 NameNode
+9）浏览器验证：
+http://192.168.0.110:50070/
+10）停止hdfs: $HADOOP_HOME/sbin下执行
+./stop-dfs.sh
+11)命令操作：
+hdfs dfs -ls / 查看
+hdfs dfs -put hello.txt / 上传
+hdfs dfs -text /hello.txt 查看内容
+hdfs dfs -cat /hello.txt 查看内容
+hdfs dfs -mkdir /test 创建目录
+hdfs dfs -mkdir -p /test/a/b 递归创建目录
+hdfs dfs -ls -R / 递归查看
+hdfs dfs -copyFromLocal hello.txt /test/a/b/h.txt 拷贝本地文件到hdfs
+hdfs dfs -get /test/a/b/h.txt 从hdfs拿文件到本地
+hdfs dfs -rm -r /test 递归删除
+12）yarn的搭建
+修改配置文件：
+mapred-site.xml:
+    <configuration>
+        <property>
+            <name>mapreduce.framework.name</name>
+            <value>yarn</value>
+        </property>
+    </configuration>
+
+yarn-site.xml:
+    <configuration>
+        <property>
+            <name>yarn.nodemanager.aux-services</name>
+            <value>mapreduce_shuffle</value>
+        </property>
+    </configuration>
+
+13）启动yarn进程
+$HADOOP_HOME/sbin 下执行
+./start-yarn.sh
+
+14）浏览器显示：
+http://192.168.0.110:8088/
+
+15）在yarn上运行mapreduce的作业
+cd $HADOOP_HOME/share/hadoop/mapreduce
+hadoop jar hadoop-mapreduce-examples-2.9.0.jar pi 4 4

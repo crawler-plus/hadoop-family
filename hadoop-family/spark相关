@@ -1,0 +1,102 @@
+spark版本:spark-2.3.0-bin-hadoop2.7
+安装步骤：
+1）解压spark并且配置到系统环境变量（省略）
+2）启动spark-shell
+cd $SPARK_HOME/
+./spark-shell --master local[2]
+3）提交作业：
+./spark-submit \
+--class site.it4u.spark.SQLContextApp \
+--master local[2] \
+/root/lib/hadoop-family-1.0-SNAPSHOT.jar \
+/root/people.json
+
+提交hiveContext作业
+./spark-submit \
+--class site.it4u.spark.HiveContextApp \
+--jars /root/mysql-connector-java-5.1.27-bin.jar \
+--master local[2] \
+/root/lib/hadoop-family-1.0-SNAPSHOT.jar
+
+mvn install:install-file -Dfile=xxx.jar -DgroupId=com.ggstar -DartifactId=ipdatabase -Dversion=1.0 -Dpackaging=jar
+
+./spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master yarn \
+--executor-memory 1G \
+--num-executors 1 \
+/usr/local/spark-2.3.0-bin-hadoop2.7/examples/jars/spark-examples_2.11-2.3.0.jar \
+4
+此处的yarn就是我们的yarn client模式
+如果是yarn cluster模式的话，yarn-cluster 如下：
+
+
+Exception in thread "main" java.lang.Exception: When running with master 'yarn' either HADOOP_CONF_DIR or YARN_CONF_DIR must be set in the environment.
+
+如果想运行在YARN之上，那么就必须要设置HADOOP_CONF_DIR或者是YARN_CONF_DIR
+两种方式：
+1） export HADOOP_CONF_DIR=/usr/local/hadoop-2.9.0/etc/hadoop
+2) $SPARK_HOME/conf/spark-env.sh 中进行配置
+
+./bin/spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master yarn-cluster \
+--executor-memory 1G \
+--num-executors 1 \
+/usr/local/spark-2.3.0-bin-hadoop2.7/examples/jars/spark-examples_2.11-2.3.0.jar \
+4
+
+yarn logs -applicationId application_1495632775836_0002
+
+打包时要注意，pom.xml中需要添加如下plugin
+<plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <configuration>
+        <archive>
+            <manifest>
+                <mainClass></mainClass>
+            </manifest>
+        </archive>
+        <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+    </configuration>
+</plugin>
+
+mvn assembly:assembly
+
+会出来hadoop-family-1.0-SNAPSHOT-jar-with-dependencies这个jar，拷贝到linux
+运行数据清洗job：
+./bin/spark-submit \
+--class site.it4u.spark.project.SpartStatCleanJobYARN \
+--name SpartStatCleanJobYARN \
+--master yarn \
+--executor-memory 1G \
+--num-executors 1 \
+--files /root/lib/ipDatabase.csv,/root/lib/ipRegion.xlsx \
+/root/lib/sql-1.0-jar-with-dependencies.jar \
+hdfs://192.168.0.110:8020/output/part-00000 hdfs://192.168.0.110:8020/clean
+
+运行数据统计job：
+./bin/spark-submit \
+--class site.it4u.spark.project.TopNStatJobYARN \
+--name TopNStatJobYARN \
+--master yarn \
+--executor-memory 1G \
+--num-executors 1 \
+/root/lib/sql-1.0-jar-with-dependencies.jar \
+hdfs://192.168.0.110:8020/clean
+
+存储格式的选择：http://www.infoq.com/cn/articles/bigdata-store-choose/
+压缩格式的选择：https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-compression-analysis/
+
+调整并行度
+./bin/spark-submit \
+--class site.it4u.spark.project.TopNStatJobYARN \
+--name TopNStatJobYARN \
+--master yarn \
+--executor-memory 1G \
+--num-executors 1 \
+--conf spark.sql.shuffle.partitions=100 \
+/root/lib/sql-1.0-jar-with-dependencies.jar \
+hdfs://192.168.0.110:8020/clean
