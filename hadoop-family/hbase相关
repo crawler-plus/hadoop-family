@@ -40,7 +40,7 @@ cp $HADOOP_HOME/etc/hadoop/hdfs-site.xml .
 cp $HADOOP_HOME/etc/hadoop/core-site.xml .
 
 4）在保证hadoop的hdfs进程启动之后，启动hbase
-$HBASE_HOME/
+$HBASE_HOME/bin
 ./start-hbase.sh
 
 4）进入客户端
